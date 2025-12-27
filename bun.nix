@@ -1833,9 +1833,9 @@
     url = "https://registry.npmjs.org/qs/-/qs-6.14.0.tgz";
     hash = "sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==";
   };
-  "quansync@0.2.11" = fetchurl {
-    url = "https://registry.npmjs.org/quansync/-/quansync-0.2.11.tgz";
-    hash = "sha512-AifT7QEbW9Nri4tAwR5M/uzpBuqfZf+zwaEM/QkzEjj7NBuFD2rBuy0K3dE+8wltbezDV7JMA0WfnCPYRSYbXA==";
+  "quansync@1.0.0" = fetchurl {
+    url = "https://registry.npmjs.org/quansync/-/quansync-1.0.0.tgz";
+    hash = "sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==";
   };
   "radix3@1.1.2" = fetchurl {
     url = "https://registry.npmjs.org/radix3/-/radix3-1.1.2.tgz";
