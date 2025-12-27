@@ -345,16 +345,22 @@
                 StateDirectoryMode = "0750";
                 WorkingDirectory = cfg.dataDir;
 
-                # FUSE capabilities
-                AmbientCapabilities = lib.mkIf cfg.fuse.enable [ "CAP_SYS_ADMIN" ];
-                CapabilityBoundingSet = lib.mkIf cfg.fuse.enable [ "CAP_SYS_ADMIN" ];
+                # Capabilities
+                # - CAP_SYS_ADMIN: Required for FUSE mounts
+                # - CAP_DAC_READ_SEARCH: Required to read restricted directories (e.g., 700 home dirs)
+                AmbientCapabilities =
+                  lib.optional cfg.fuse.enable "CAP_SYS_ADMIN"
+                  ++ lib.optional (!cfg.protectHome) "CAP_DAC_READ_SEARCH";
+                CapabilityBoundingSet =
+                  lib.optional cfg.fuse.enable "CAP_SYS_ADMIN"
+                  ++ lib.optional (!cfg.protectHome) "CAP_DAC_READ_SEARCH";
                 DeviceAllow = lib.mkIf cfg.fuse.enable [ "/dev/fuse rw" ];
 
                 # Security hardening
                 PrivateTmp = true;
                 ProtectSystem = "strict";
                 ProtectHome = cfg.protectHome;
-                NoNewPrivileges = !cfg.fuse.enable;
+                NoNewPrivileges = cfg.fuse.enable == false && cfg.protectHome;
                 ProtectKernelTunables = true;
                 ProtectKernelModules = true;
                 ProtectControlGroups = true;
