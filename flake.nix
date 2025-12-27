@@ -88,7 +88,7 @@
           # Pre-fetched npm dependencies (pure)
           npmDeps = pkgs.fetchNpmDeps {
             src = pkgs.lib.cleanSource ./.;
-            hash = "sha256-rOlvIMmQ/mLu+YFO7OYgAGKT70B0hBaGtMwtzQnSx0E=";
+            hash = "sha256-ZFt+kLjg4RqFYnR95iMcc+4CIrxo16CaXcEry4YiOnw=";
           };
 
           # Handle peer dependency conflicts
