@@ -295,6 +295,16 @@
                 '';
               };
             };
+
+            protectHome = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = ''
+                Enable ProtectHome systemd security hardening.
+                When true, /home, /root, and /run/user are inaccessible.
+                Set to false if you need to backup home directories.
+              '';
+            };
           };
 
           config = lib.mkIf cfg.enable {
@@ -343,7 +353,7 @@
                 # Security hardening
                 PrivateTmp = true;
                 ProtectSystem = "strict";
-                ProtectHome = true;
+                ProtectHome = cfg.protectHome;
                 NoNewPrivileges = !cfg.fuse.enable;
                 ProtectKernelTunables = true;
                 ProtectKernelModules = true;

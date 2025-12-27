@@ -168,6 +168,7 @@ nix develop
 | `serverIp` | `"0.0.0.0"` | Bind address |
 | `openFirewall` | `false` | Open firewall port (NixOS only) |
 | `fuse.enable` | `true` | Enable FUSE/remote mounts (NixOS only) |
+| `protectHome` | `true` | Block /home access (NixOS only, set false to backup home dirs) |
 | `timezone` | `"UTC"` | Timezone for scheduling |
 | `resticHostname` | `"zerobyte"` | Hostname for restic |
 
