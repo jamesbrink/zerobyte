@@ -81,8 +81,19 @@
           nativeBuildInputs = with pkgs; [
             bun
             nodejs
+            npmHooks.npmConfigHook
             makeWrapper
           ];
+
+          # Pre-fetched npm dependencies (pure)
+          npmDeps = pkgs.fetchNpmDeps {
+            src = pkgs.lib.cleanSource ./.;
+            hash = "sha256-rOlvIMmQ/mLu+YFO7OYgAGKT70B0hBaGtMwtzQnSx0E=";
+          };
+
+          # Handle peer dependency conflicts
+          npmFlags = [ "--legacy-peer-deps" ];
+          makeCacheWritable = true;
 
           # Disable fixup phase for node_modules (has many binaries)
           dontFixup = !isLinux system;
@@ -90,13 +101,9 @@
           buildPhase = ''
             runHook preBuild
 
-            # Set HOME for bun cache
             export HOME=$(mktemp -d)
 
-            # Install dependencies
-            bun install --frozen-lockfile
-
-            # Build the application
+            # Build the application using bun
             bun run build
 
             runHook postBuild
@@ -116,10 +123,8 @@
             cp package.json $out/lib/zerobyte/
             cp bun.lock $out/lib/zerobyte/
 
-            # Install production dependencies
-            export HOME=$(mktemp -d)
-            cd $out/lib/zerobyte
-            bun install --production --frozen-lockfile
+            # Copy node_modules
+            cp -r node_modules $out/lib/zerobyte/
 
             # Create wrapper script with runtime dependencies
             # Note: davfs2 and fuse3 are Linux-only
@@ -173,6 +178,9 @@
             biome
             typescript
 
+            # Nix packaging tools (for updating npmDeps hash)
+            prefetch-npm-deps
+
             # External tools (for local testing)
             restic
             rclone
@@ -193,6 +201,10 @@
             echo "  node:     $(node --version)"
             echo "  restic:   $(restic version | head -1)"
             echo "  rclone:   $(rclone version | head -1)"
+            echo ""
+            echo "To update npm deps hash:"
+            echo "  npm install --package-lock-only --legacy-peer-deps"
+            echo "  prefetch-npm-deps package-lock.json"
           '';
         };
       }
