@@ -110,22 +110,25 @@
           installPhase = ''
             runHook preInstall
 
-            # Create output directories
-            mkdir -p $out/lib/zerobyte
+            # Create output directories matching the expected structure
+            mkdir -p $out/lib/zerobyte/dist
+            mkdir -p $out/lib/zerobyte/drizzle
             mkdir -p $out/bin
 
-            # Copy built assets
-            cp -r dist/server $out/lib/zerobyte/server
-            cp -r dist/client $out/lib/zerobyte/client
-            cp -r app/drizzle $out/lib/zerobyte/drizzle
+            # Copy built assets (server expects dist/server and dist/client)
+            cp -r dist/server $out/lib/zerobyte/dist/server
+            cp -r dist/client $out/lib/zerobyte/dist/client
+            cp -r app/drizzle/* $out/lib/zerobyte/drizzle/
             cp package.json $out/lib/zerobyte/
 
             # Copy node_modules for runtime dependencies
             cp -r node_modules $out/lib/zerobyte/
 
             # Create wrapper script with runtime dependencies
+            # --chdir ensures server finds dist/client relative to package dir
             makeWrapper ${pkgs.bun}/bin/bun $out/bin/zerobyte \
-              --add-flags "$out/lib/zerobyte/server/index.js" \
+              --chdir $out/lib/zerobyte \
+              --add-flags "dist/server/index.js" \
               --prefix PATH : ${pkgs.lib.makeBinPath ([
                 pkgs.restic
                 pkgs.rclone
