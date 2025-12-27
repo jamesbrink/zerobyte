@@ -162,9 +162,12 @@ nix develop
 | `enable` | `false` | Enable Zerobyte service |
 | `port` | `4096` | HTTP port |
 | `dataDir` | `/var/lib/zerobyte` | Data directory |
+| `user` | `"zerobyte"` | User to run service as |
+| `group` | `"zerobyte"` | Group to run service as |
+| `createUser` | `true` | Create user/group automatically |
 | `serverIp` | `"0.0.0.0"` | Bind address |
-| `openFirewall` | `false` | Open firewall port |
-| `fuse.enable` | `true` | Enable FUSE/remote mounts |
+| `openFirewall` | `false` | Open firewall port (NixOS only) |
+| `fuse.enable` | `true` | Enable FUSE/remote mounts (NixOS only) |
 | `timezone` | `"UTC"` | Timezone for scheduling |
 | `resticHostname` | `"zerobyte"` | Hostname for restic |
 

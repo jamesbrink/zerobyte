@@ -231,6 +231,15 @@
               description = "Group under which Zerobyte runs.";
             };
 
+            createUser = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = ''
+                Whether to create the user and group automatically.
+                Set to false if using an existing user account.
+              '';
+            };
+
             dataDir = lib.mkOption {
               type = lib.types.path;
               default = "/var/lib/zerobyte";
@@ -287,7 +296,7 @@
           };
 
           config = lib.mkIf cfg.enable {
-            users.users.${cfg.user} = {
+            users.users.${cfg.user} = lib.mkIf cfg.createUser {
               isSystemUser = true;
               group = cfg.group;
               home = cfg.dataDir;
@@ -295,7 +304,7 @@
               description = "Zerobyte service user";
             };
 
-            users.groups.${cfg.group} = {};
+            users.groups.${cfg.group} = lib.mkIf cfg.createUser {};
 
             systemd.services.zerobyte = {
               description = "Zerobyte backup management service";
