@@ -4,9 +4,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    bun2nix.url = "github:nix-community/bun2nix";
+    bun2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, bun2nix }:
     let
       # Systems for packages and devShells
       allSystems = [
@@ -42,8 +44,15 @@
       # Check if system is Linux
       isLinux = system: builtins.elem system linuxSystems;
 
-      # Package definitions (shared across systems)
-      mkPackages = pkgs: system: rec {
+    in
+    flake-utils.lib.eachSystem allSystems (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [ bun2nix.overlays.default ];
+        };
+
         shoutrrr = pkgs.stdenv.mkDerivation {
           pname = "shoutrrr";
           version = shoutrrrVersion;
@@ -55,7 +64,6 @@
 
           sourceRoot = ".";
 
-          # autoPatchelfHook only needed on Linux
           nativeBuildInputs = pkgs.lib.optionals (isLinux system) [ pkgs.autoPatchelfHook ];
 
           installPhase = ''
@@ -78,32 +86,22 @@
 
           src = pkgs.lib.cleanSource ./.;
 
-          nativeBuildInputs = with pkgs; [
-            bun
-            nodejs
-            npmHooks.npmConfigHook
-            makeWrapper
+          nativeBuildInputs = [
+            pkgs.bun2nix.hook
+            pkgs.makeWrapper
           ];
 
-          # Pre-fetched npm dependencies (pure)
-          npmDeps = pkgs.fetchNpmDeps {
-            src = pkgs.lib.cleanSource ./.;
-            hash = "sha256-l2OlExVklyDInPE52WBaXW6d9r8XgC4y4s/b6Ju9sb0=";
+          # Fetch bun dependencies using bun2nix
+          bunDeps = pkgs.bun2nix.fetchBunDeps {
+            bunNix = ./bun.nix;
           };
-
-          # Handle peer dependency conflicts
-          npmFlags = [ "--legacy-peer-deps" ];
-          makeCacheWritable = true;
-
-          # Disable fixup phase for node_modules (has many binaries)
-          dontFixup = !isLinux system;
 
           buildPhase = ''
             runHook preBuild
 
             export HOME=$(mktemp -d)
 
-            # Build the application using bun
+            # Build the application (react-router build)
             bun run build
 
             runHook postBuild
@@ -119,15 +117,13 @@
             # Copy built assets
             cp -r dist/server $out/lib/zerobyte/server
             cp -r dist/client $out/lib/zerobyte/client
-            cp -r app/drizzle $out/lib/zerobyte/migrations
+            cp -r app/drizzle $out/lib/zerobyte/drizzle
             cp package.json $out/lib/zerobyte/
-            cp bun.lock $out/lib/zerobyte/
 
-            # Copy node_modules
+            # Copy node_modules for runtime dependencies
             cp -r node_modules $out/lib/zerobyte/
 
             # Create wrapper script with runtime dependencies
-            # Note: davfs2 and fuse3 are Linux-only
             makeWrapper ${pkgs.bun}/bin/bun $out/bin/zerobyte \
               --add-flags "$out/lib/zerobyte/server/index.js" \
               --prefix PATH : ${pkgs.lib.makeBinPath ([
@@ -153,46 +149,38 @@
           };
         };
 
-        default = zerobyte;
-      };
-
-    in
-    flake-utils.lib.eachSystem allSystems (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        };
-        packages = mkPackages pkgs system;
       in
       {
-        packages = packages;
+        packages = {
+          inherit zerobyte shoutrrr;
+          default = zerobyte;
+        };
 
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
+          buildInputs = [
             # JavaScript runtime and package manager
-            bun
-            nodejs
+            pkgs.bun
+            pkgs.nodejs
 
             # Development tools
-            biome
-            typescript
+            pkgs.biome
+            pkgs.typescript
 
-            # Nix packaging tools (for updating npmDeps hash)
-            prefetch-npm-deps
+            # bun2nix CLI for regenerating bun.nix
+            bun2nix.packages.${system}.bun2nix
 
             # External tools (for local testing)
-            restic
-            rclone
-            packages.shoutrrr
+            pkgs.restic
+            pkgs.rclone
+            shoutrrr
 
             # Database tools
-            sqlite
+            pkgs.sqlite
 
             # Utilities
-            git
-            curl
-            jq
+            pkgs.git
+            pkgs.curl
+            pkgs.jq
           ];
 
           shellHook = ''
@@ -202,17 +190,16 @@
             echo "  restic:   $(restic version | head -1)"
             echo "  rclone:   $(rclone version | head -1)"
             echo ""
-            echo "To update npm deps hash:"
-            echo "  npm install --package-lock-only --legacy-peer-deps"
-            echo "  prefetch-npm-deps package-lock.json"
+            echo "To update bun.nix after changing dependencies:"
+            echo "  bun2nix -o bun.nix"
           '';
         };
       }
     ) // {
       # Overlay
       overlays.default = final: prev: {
-        zerobyte = (mkPackages final final.system).zerobyte;
-        shoutrrr = (mkPackages final final.system).shoutrrr;
+        zerobyte = self.packages.${final.system}.zerobyte;
+        shoutrrr = self.packages.${final.system}.shoutrrr;
       };
 
       # NixOS Module
@@ -327,7 +314,8 @@
                 NODE_ENV = "production";
                 SERVER_IP = cfg.serverIp;
                 RESTIC_HOSTNAME = cfg.resticHostname;
-                DATABASE_URL = "${cfg.dataDir}/data/ironmount.db";
+                DATABASE_URL = "${cfg.dataDir}/data/zerobyte.db";
+                MIGRATIONS_PATH = "${cfg.package}/lib/zerobyte/drizzle";
                 TZ = cfg.timezone;
               } // cfg.environment;
 
@@ -447,7 +435,8 @@
                   NODE_ENV = "production";
                   SERVER_IP = cfg.serverIp;
                   RESTIC_HOSTNAME = cfg.resticHostname;
-                  DATABASE_URL = "${cfg.dataDir}/data/ironmount.db";
+                  DATABASE_URL = "${cfg.dataDir}/data/zerobyte.db";
+                  MIGRATIONS_PATH = "${cfg.package}/lib/zerobyte/drizzle";
                   TZ = cfg.timezone;
                 } // cfg.environment;
 

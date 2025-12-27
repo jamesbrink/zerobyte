@@ -171,6 +171,15 @@ nix develop
 | `timezone` | `"UTC"` | Timezone for scheduling |
 | `resticHostname` | `"zerobyte"` | Hostname for restic |
 
+**Updating dependencies (for contributors):**
+
+After modifying `package.json` or `bun.lock`, regenerate the Nix dependency file:
+
+```bash
+nix develop
+bun2nix -o bun.nix
+```
+
 ## Examples
 
 See [examples/README.md](examples/README.md) for runnable, copy/paste-friendly examples.
