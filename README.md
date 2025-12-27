@@ -132,30 +132,7 @@ nix develop
 }
 ```
 
-**nix-darwin module (macOS):**
-
-```nix
-{
-  inputs.zerobyte.url = "github:nicotsx/zerobyte";
-  inputs.nix-darwin.url = "github:LnL7/nix-darwin";
-
-  outputs = { self, nix-darwin, zerobyte }: {
-    darwinConfigurations.myhost = nix-darwin.lib.darwinSystem {
-      modules = [
-        zerobyte.darwinModules.default
-        {
-          services.zerobyte = {
-            enable = true;
-            port = 4096;
-          };
-        }
-      ];
-    };
-  };
-}
-```
-
-**Available module options:**
+**Available module options (NixOS):**
 
 | Option | Default | Description |
 |--------|---------|-------------|
