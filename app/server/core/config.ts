@@ -6,12 +6,14 @@ const envSchema = type({
 	SERVER_IP: 'string = "localhost"',
 	SERVER_IDLE_TIMEOUT: 'string.integer.parse = "60"',
 	RESTIC_HOSTNAME: "string = 'zerobyte'",
+	MIGRATIONS_PATH: "string?",
 }).pipe((s) => ({
 	__prod__: s.NODE_ENV === "production",
 	environment: s.NODE_ENV,
 	serverIp: s.SERVER_IP,
 	serverIdleTimeout: s.SERVER_IDLE_TIMEOUT,
 	resticHostname: s.RESTIC_HOSTNAME,
+	migrationsPath: s.MIGRATIONS_PATH,
 }));
 
 const parseConfig = (env: unknown) => {
