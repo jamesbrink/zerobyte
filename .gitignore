@@ -1,6 +1,7 @@
 .DS_Store
 .direnv/
 /node_modules/
+result
 
 # React Router
 /.react-router/
