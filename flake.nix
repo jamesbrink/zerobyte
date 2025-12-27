@@ -455,7 +455,7 @@
         {
           name = system;
           value = {
-            integration = pkgs.nixosTest {
+            integration = pkgs.testers.nixosTest {
               name = "zerobyte-integration";
 
               nodes.machine = { config, pkgs, ... }: {
