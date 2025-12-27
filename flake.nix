@@ -382,7 +382,11 @@
           };
         };
 
-      # nix-darwin Module (macOS)
+      # nix-darwin Module (macOS) - EXPERIMENTAL/FUTURE USE
+      # macOS lacks Linux capabilities (CAP_DAC_READ_SEARCH, etc.) and uses TCC
+      # (Transparency, Consent, and Control) which blocks access to ~/Desktop,
+      # ~/Documents, etc. even for root. Full support requires significant code
+      # changes to handle TCC permission grants via System Preferences.
       darwinModules.default = { config, lib, pkgs, ... }:
         let
           cfg = config.services.zerobyte;
