@@ -98,6 +98,53 @@ services:
 
 If you need remote mount capabilities, keep the original configuration with `cap_add: SYS_ADMIN` and `devices: /dev/fuse:/dev/fuse`.
 
+### Nix Flake
+
+Zerobyte provides a Nix flake for NixOS users and Nix-based development environments.
+
+**Development shell:**
+
+```bash
+nix develop
+```
+
+**NixOS module:**
+
+```nix
+{
+  inputs.zerobyte.url = "github:nicotsx/zerobyte";
+
+  outputs = { self, nixpkgs, zerobyte }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        zerobyte.nixosModules.default
+        {
+          services.zerobyte = {
+            enable = true;
+            port = 4096;
+            openFirewall = true;
+            # fuse.enable = true;  # Enabled by default for remote mounts
+          };
+        }
+      ];
+    };
+  };
+}
+```
+
+**Available module options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `enable` | `false` | Enable Zerobyte service |
+| `port` | `4096` | HTTP port |
+| `dataDir` | `/var/lib/zerobyte` | Data directory |
+| `serverIp` | `"0.0.0.0"` | Bind address |
+| `openFirewall` | `false` | Open firewall port |
+| `fuse.enable` | `true` | Enable FUSE/remote mounts |
+| `timezone` | `"UTC"` | Timezone for scheduling |
+| `resticHostname` | `"zerobyte"` | Hostname for restic |
+
 ## Examples
 
 See [examples/README.md](examples/README.md) for runnable, copy/paste-friendly examples.
