@@ -21,6 +21,10 @@ if ! command -v bun &> /dev/null; then
     exit 1
 fi
 
+# Get absolute path to bun (needed for launchd)
+BUN_PATH="$(which bun)"
+echo "Found bun at: $BUN_PATH"
+
 if ! command -v restic &> /dev/null; then
     echo "Warning: restic is not installed."
     echo "Install with: brew install restic"
@@ -58,6 +62,7 @@ echo "Installing application..."
 # Copy application files
 sudo cp -r "$PROJECT_ROOT/dist" "$INSTALL_DIR/"
 sudo cp "$PROJECT_ROOT/package.json" "$INSTALL_DIR/"
+sudo cp -r "$PROJECT_ROOT/app/drizzle" "$INSTALL_DIR/migrations"
 
 # Install production dependencies
 cd "$INSTALL_DIR"
@@ -77,8 +82,8 @@ if launchctl list | grep -q "com.zerobyte.agent"; then
     launchctl unload "$PLIST_DST" 2>/dev/null || true
 fi
 
-# Install plist
-cp "$PLIST_SRC" "$PLIST_DST"
+# Install plist with correct bun path
+sed "s|/usr/local/bin/bun|$BUN_PATH|g" "$PLIST_SRC" > "$PLIST_DST"
 
 echo ""
 echo "  Installation complete!"

@@ -5,6 +5,7 @@
     <key>Label</key>
     <string>com.zerobyte.agent</string>
 
+    <!-- Note: /usr/local/bin/bun is replaced by install.sh with the actual bun path -->
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/bun</string>

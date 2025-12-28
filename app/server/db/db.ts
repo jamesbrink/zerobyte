@@ -7,7 +7,7 @@ import { DATABASE_URL } from "../core/constants";
 import * as schema from "./schema";
 import fs from "node:fs/promises";
 import { config } from "../core/config";
-import { isLinux } from "../utils/platform";
+import { isLinux, isDarwin } from "../utils/platform";
 
 await fs.mkdir(path.dirname(DATABASE_URL), { recursive: true });
 
@@ -18,8 +18,13 @@ export const runDbMigrations = () => {
 	let migrationsFolder: string;
 
 	if (config.__prod__) {
-		// In production Docker container
-		migrationsFolder = path.join("/app", "assets", "migrations");
+		if (isDarwin()) {
+			// macOS production - migrations copied alongside app by install.sh
+			migrationsFolder = path.join(process.cwd(), "migrations");
+		} else {
+			// Docker/Linux production
+			migrationsFolder = path.join("/app", "assets", "migrations");
+		}
 	} else if (isLinux()) {
 		// Development on Linux (Docker)
 		migrationsFolder = path.join("/app", "app", "drizzle");
