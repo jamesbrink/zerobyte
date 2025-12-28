@@ -14,6 +14,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "../../../../components/ui/alert-dialog";
+import { useSystemInfo } from "../../../../hooks/use-system-info";
 import type { RepositoryFormValues } from "../create-repository-form";
 
 type Props = {
@@ -23,6 +24,10 @@ type Props = {
 export const LocalRepositoryForm = ({ form }: Props) => {
 	const [showPathBrowser, setShowPathBrowser] = useState(false);
 	const [showPathWarning, setShowPathWarning] = useState(false);
+	const { capabilities, isLoading } = useSystemInfo();
+
+	const defaultPath = capabilities.defaultRepositoryPath;
+	const displayPath = form.watch("path") || defaultPath;
 
 	return (
 		<>
@@ -30,9 +35,15 @@ export const LocalRepositoryForm = ({ form }: Props) => {
 				<FormLabel>Repository Directory</FormLabel>
 				<div className="flex items-center gap-2">
 					<div className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded-md border">
-						{form.watch("path") || "/var/lib/zerobyte/repositories"}
+						{isLoading ? "Loading..." : displayPath || "Select a directory"}
 					</div>
-					<Button type="button" variant="outline" onClick={() => setShowPathWarning(true)} size="sm">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => (capabilities.isContainerized ? setShowPathWarning(true) : setShowPathBrowser(true))}
+						size="sm"
+						disabled={isLoading}
+					>
 						<Pencil className="h-4 w-4 mr-2" />
 						Change
 					</Button>
@@ -53,8 +64,8 @@ export const LocalRepositoryForm = ({ form }: Props) => {
 								If the path is not a host mount, you will lose your repository data when the container restarts.
 							</p>
 							<p className="text-sm text-muted-foreground">
-								The default path <code className="bg-muted px-1 rounded">/var/lib/zerobyte/repositories</code> is
-								already mounted from the host and is safe to use.
+								The default path <code className="bg-muted px-1 rounded">{defaultPath}</code> is already mounted from
+								the host and is safe to use.
 							</p>
 						</AlertDialogDescription>
 					</AlertDialogHeader>
@@ -83,7 +94,7 @@ export const LocalRepositoryForm = ({ form }: Props) => {
 					<div className="py-4">
 						<DirectoryBrowser
 							onSelectPath={(path) => form.setValue("path", path)}
-							selectedPath={form.watch("path") || "/var/lib/zerobyte/repositories"}
+							selectedPath={displayPath || "/"}
 						/>
 					</div>
 					<AlertDialogFooter>

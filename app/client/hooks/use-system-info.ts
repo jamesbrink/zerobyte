@@ -15,6 +15,8 @@ export function useSystemInfo() {
 			rclone: false,
 			sysAdmin: false,
 			remoteMounts: false,
+			isContainerized: false,
+			defaultRepositoryPath: "",
 		},
 		isLoading,
 		error,

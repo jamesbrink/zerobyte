@@ -7,6 +7,8 @@ export type SystemCapabilities = {
 	rclone: boolean;
 	sysAdmin: boolean;
 	remoteMounts: boolean;
+	isContainerized: boolean;
+	defaultRepositoryPath: string;
 };
 
 let capabilitiesPromise: Promise<SystemCapabilities> | null = null;
@@ -31,6 +33,7 @@ export async function getCapabilities(): Promise<SystemCapabilities> {
 async function detectCapabilities(): Promise<SystemCapabilities> {
 	const platform = getPlatform();
 	const sysAdmin = await detectSysAdmin();
+	const isContainerized = await detectContainer();
 
 	logger.info(`Platform detected: ${platform}`);
 
@@ -40,6 +43,8 @@ async function detectCapabilities(): Promise<SystemCapabilities> {
 		sysAdmin,
 		// Remote mounts require Linux + SYS_ADMIN capability
 		remoteMounts: isLinux() && sysAdmin,
+		isContainerized,
+		defaultRepositoryPath: getPaths().repositoryBase,
 	};
 }
 
@@ -109,4 +114,50 @@ async function detectSysAdmin(): Promise<boolean> {
 		logger.warn("sysAdmin capability: disabled. To enable: add 'cap_add: SYS_ADMIN' in docker-compose.yml");
 		return false;
 	}
+}
+
+/**
+ * Detects if running inside a container (Docker, Podman, etc.)
+ * Checks for common container indicators:
+ * 1. /.dockerenv file exists (Docker)
+ * 2. /run/.containerenv file exists (Podman)
+ * 3. /proc/1/cgroup contains container-related strings
+ */
+async function detectContainer(): Promise<boolean> {
+	// macOS doesn't run in containers in the traditional sense
+	if (isDarwin()) {
+		return false;
+	}
+
+	try {
+		// Check for Docker
+		await fs.access("/.dockerenv");
+		logger.info("Container detected: Docker (/.dockerenv exists)");
+		return true;
+	} catch {
+		// Not Docker, continue checking
+	}
+
+	try {
+		// Check for Podman
+		await fs.access("/run/.containerenv");
+		logger.info("Container detected: Podman (/run/.containerenv exists)");
+		return true;
+	} catch {
+		// Not Podman, continue checking
+	}
+
+	try {
+		// Check cgroup for container indicators
+		const cgroup = await fs.readFile("/proc/1/cgroup", "utf-8");
+		if (cgroup.includes("docker") || cgroup.includes("kubepods") || cgroup.includes("lxc")) {
+			logger.info("Container detected: via /proc/1/cgroup");
+			return true;
+		}
+	} catch {
+		// Could not read cgroup
+	}
+
+	logger.info("Container detection: not containerized");
+	return false;
 }

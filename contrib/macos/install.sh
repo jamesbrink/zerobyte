@@ -62,11 +62,12 @@ echo "Installing application..."
 # Copy application files
 sudo cp -r "$PROJECT_ROOT/dist" "$INSTALL_DIR/"
 sudo cp "$PROJECT_ROOT/package.json" "$INSTALL_DIR/"
+sudo cp "$PROJECT_ROOT/bun.lockb" "$INSTALL_DIR/"
 sudo cp -r "$PROJECT_ROOT/app/drizzle" "$INSTALL_DIR/migrations"
 
-# Install production dependencies
+# Install production dependencies using the resolved bun path
 cd "$INSTALL_DIR"
-sudo bun install --production --frozen-lockfile
+sudo "$BUN_PATH" install --production --frozen-lockfile
 
 # Set ownership
 sudo chown -R "$USER" "$INSTALL_DIR"

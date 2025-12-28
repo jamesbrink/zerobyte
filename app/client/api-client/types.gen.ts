@@ -3015,10 +3015,12 @@ export type GetSystemInfoResponses = {
      */
     200: {
         capabilities: {
-            platform: 'linux' | 'darwin' | 'unsupported';
+            defaultRepositoryPath: string;
+            isContainerized: boolean;
+            platform: 'darwin' | 'linux' | 'unsupported';
             rclone: boolean;
-            sysAdmin: boolean;
             remoteMounts: boolean;
+            sysAdmin: boolean;
         };
     };
 };

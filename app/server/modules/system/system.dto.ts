@@ -6,6 +6,8 @@ export const capabilitiesSchema = type({
 	rclone: "boolean",
 	sysAdmin: "boolean",
 	remoteMounts: "boolean",
+	isContainerized: "boolean",
+	defaultRepositoryPath: "string",
 });
 
 export const systemInfoResponse = type({

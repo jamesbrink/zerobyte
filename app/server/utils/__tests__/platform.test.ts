@@ -1,7 +1,7 @@
 import { test, describe, expect } from "bun:test";
 import os from "node:os";
 import path from "node:path";
-import { getPlatform, isLinux, isDarwin, getPaths, type Platform } from "../platform";
+import { getPlatform, isLinux, isDarwin, getPaths } from "../platform";
 
 describe("platform utilities", () => {
 	describe("getPlatform", () => {
@@ -103,10 +103,12 @@ describe("platform utilities", () => {
 		test("should respect DATABASE_URL environment variable", () => {
 			const originalEnv = process.env.DATABASE_URL;
 			try {
-				process.env.DATABASE_URL = "/custom/path/test.db";
-				// Note: getPaths caches at module level, but DATABASE_URL is read fresh
-				// This test verifies the logic is correct, though caching may affect runtime
-				expect(process.env.DATABASE_URL).toBe("/custom/path/test.db");
+				const customPath = "/custom/path/test.db";
+				process.env.DATABASE_URL = customPath;
+
+				// getPaths() should return the custom DATABASE_URL value
+				const paths = getPaths();
+				expect(paths.databaseUrl).toBe(customPath);
 			} finally {
 				if (originalEnv !== undefined) {
 					process.env.DATABASE_URL = originalEnv;
