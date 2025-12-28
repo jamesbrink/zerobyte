@@ -25,7 +25,7 @@ export const runDbMigrations = () => {
 		migrationsFolder = path.join("/app", "app", "drizzle");
 	} else {
 		// Development on macOS (native) or other platforms
-		migrationsFolder = path.join(import.meta.dir, "..", "..", "drizzle");
+		migrationsFolder = path.join(process.cwd(), "app", "drizzle");
 	}
 
 	migrate(db, { migrationsFolder });

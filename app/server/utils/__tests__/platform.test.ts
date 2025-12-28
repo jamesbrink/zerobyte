@@ -58,17 +58,23 @@ describe("platform utilities", () => {
 			expect(paths).toHaveProperty("rcloneConfigDir");
 		});
 
-		test("should return absolute paths", () => {
+		test("should return absolute paths for generated paths", () => {
 			const paths = getPaths();
 
+			// These paths are always generated as absolute
 			expect(path.isAbsolute(paths.dataBase)).toBe(true);
 			expect(path.isAbsolute(paths.volumeMountBase)).toBe(true);
 			expect(path.isAbsolute(paths.repositoryBase)).toBe(true);
-			expect(path.isAbsolute(paths.databaseUrl)).toBe(true);
 			expect(path.isAbsolute(paths.resticPassFile)).toBe(true);
 			expect(path.isAbsolute(paths.resticCacheDir)).toBe(true);
 			expect(path.isAbsolute(paths.sshKeysDir)).toBe(true);
 			expect(path.isAbsolute(paths.rcloneConfigDir)).toBe(true);
+
+			// databaseUrl may come from DATABASE_URL env var which can be relative
+			// Only check it's absolute when not overridden by env var
+			if (!process.env.DATABASE_URL) {
+				expect(path.isAbsolute(paths.databaseUrl)).toBe(true);
+			}
 		});
 
 		test("paths should be consistent with platform", () => {
