@@ -98,6 +98,53 @@ services:
 
 If you need remote mount capabilities, keep the original configuration with `cap_add: SYS_ADMIN` and `devices: /dev/fuse:/dev/fuse`.
 
+### macOS Support (Experimental)
+
+Zerobyte has experimental support for running natively on macOS with the following limitations:
+
+**Supported Features:**
+- Directory backend for local folders
+- Local repositories on disk
+- Cloud repositories (S3, R2, GCS, Azure, REST, SFTP)
+- All backup scheduling and management features
+
+**Unsupported Features (macOS only):**
+- Remote mount backends: NFS, SMB, WebDAV, SFTP volumes, and Rclone volumes
+
+#### Installation on macOS
+
+**Using Nix (Recommended):**
+```bash
+# Install Nix if needed: https://nixos.org/download
+nix develop
+
+# Install dependencies and build
+bun install
+bun run build
+```
+
+**Manual Installation:**
+```bash
+# Install dependencies via Homebrew
+brew install bun restic rclone
+
+# Clone and build
+git clone https://github.com/nicotsx/zerobyte.git
+cd zerobyte
+bun install
+bun run build
+
+# Install as a service
+./contrib/macos/install.sh
+launchctl load ~/Library/LaunchAgents/com.zerobyte.agent.plist
+```
+
+**Data Locations on macOS:**
+- Database: `~/Library/Application Support/zerobyte/data/ironmount.db`
+- Repositories: `~/Library/Application Support/zerobyte/repositories/`
+- Restic password: `~/Library/Application Support/zerobyte/data/restic.pass`
+- Logs: `/usr/local/var/log/zerobyte/`
+
 ## Examples
 
 See [examples/README.md](examples/README.md) for runnable, copy/paste-friendly examples.

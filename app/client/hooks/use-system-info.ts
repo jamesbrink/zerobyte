@@ -10,7 +10,12 @@ export function useSystemInfo() {
 	});
 
 	return {
-		capabilities: data?.capabilities ?? { rclone: false, sysAdmin: false },
+		capabilities: data?.capabilities ?? {
+			platform: "unsupported" as const,
+			rclone: false,
+			sysAdmin: false,
+			remoteMounts: false,
+		},
 		isLoading,
 		error,
 		systemInfo: data,

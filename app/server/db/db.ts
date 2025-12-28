@@ -7,6 +7,7 @@ import { DATABASE_URL } from "../core/constants";
 import * as schema from "./schema";
 import fs from "node:fs/promises";
 import { config } from "../core/config";
+import { isLinux } from "../utils/platform";
 
 await fs.mkdir(path.dirname(DATABASE_URL), { recursive: true });
 
@@ -14,10 +15,17 @@ const sqlite = new Database(DATABASE_URL);
 export const db = drizzle({ client: sqlite, schema });
 
 export const runDbMigrations = () => {
-	let migrationsFolder = path.join("/app", "assets", "migrations");
+	let migrationsFolder: string;
 
-	if (!config.__prod__) {
+	if (config.__prod__) {
+		// In production Docker container
+		migrationsFolder = path.join("/app", "assets", "migrations");
+	} else if (isLinux()) {
+		// Development on Linux (Docker)
 		migrationsFolder = path.join("/app", "app", "drizzle");
+	} else {
+		// Development on macOS (native) or other platforms
+		migrationsFolder = path.join(import.meta.dir, "..", "..", "drizzle");
 	}
 
 	migrate(db, { migrationsFolder });

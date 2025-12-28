@@ -150,63 +150,83 @@ export const CreateVolumeForm = ({ onSubmit, mode = "create", initialValues, for
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<div>
-												<SelectItem disabled={!capabilities.sysAdmin} value="nfs">
+												<SelectItem disabled={!capabilities.remoteMounts} value="nfs">
 													NFS
 												</SelectItem>
 											</div>
 										</TooltipTrigger>
-										<TooltipContent className={cn({ hidden: capabilities.sysAdmin })}>
-											<p>Remote mounts require SYS_ADMIN capability</p>
+										<TooltipContent className={cn({ hidden: capabilities.remoteMounts })}>
+											<p>
+												{capabilities.platform === "darwin"
+													? "Remote mounts are not supported on macOS"
+													: "Remote mounts require SYS_ADMIN capability"}
+											</p>
 										</TooltipContent>
 									</Tooltip>
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<div>
-												<SelectItem disabled={!capabilities.sysAdmin} value="smb">
+												<SelectItem disabled={!capabilities.remoteMounts} value="smb">
 													SMB
 												</SelectItem>
 											</div>
 										</TooltipTrigger>
-										<TooltipContent className={cn({ hidden: capabilities.sysAdmin })}>
-											<p>Remote mounts require SYS_ADMIN capability</p>
+										<TooltipContent className={cn({ hidden: capabilities.remoteMounts })}>
+											<p>
+												{capabilities.platform === "darwin"
+													? "Remote mounts are not supported on macOS"
+													: "Remote mounts require SYS_ADMIN capability"}
+											</p>
 										</TooltipContent>
 									</Tooltip>
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<div>
-												<SelectItem disabled={!capabilities.sysAdmin} value="webdav">
+												<SelectItem disabled={!capabilities.remoteMounts} value="webdav">
 													WebDAV
 												</SelectItem>
 											</div>
 										</TooltipTrigger>
-										<TooltipContent className={cn({ hidden: capabilities.sysAdmin })}>
-											<p>Remote mounts require SYS_ADMIN capability</p>
+										<TooltipContent className={cn({ hidden: capabilities.remoteMounts })}>
+											<p>
+												{capabilities.platform === "darwin"
+													? "Remote mounts are not supported on macOS"
+													: "Remote mounts require SYS_ADMIN capability"}
+											</p>
 										</TooltipContent>
 									</Tooltip>
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<div>
-												<SelectItem disabled={!capabilities.sysAdmin} value="sftp">
+												<SelectItem disabled={!capabilities.remoteMounts} value="sftp">
 													SFTP
 												</SelectItem>
 											</div>
 										</TooltipTrigger>
-										<TooltipContent className={cn({ hidden: capabilities.sysAdmin })}>
-											<p>Remote mounts require SYS_ADMIN capability</p>
+										<TooltipContent className={cn({ hidden: capabilities.remoteMounts })}>
+											<p>
+												{capabilities.platform === "darwin"
+													? "Remote mounts are not supported on macOS"
+													: "Remote mounts require SYS_ADMIN capability"}
+											</p>
 										</TooltipContent>
 									</Tooltip>
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<div>
-												<SelectItem disabled={!capabilities.rclone || !capabilities.sysAdmin} value="rclone">
+												<SelectItem disabled={!capabilities.rclone || !capabilities.remoteMounts} value="rclone">
 													rclone
 												</SelectItem>
 											</div>
 										</TooltipTrigger>
-										<TooltipContent className={cn({ hidden: capabilities.sysAdmin })}>
-											<p>Remote mounts require SYS_ADMIN capability</p>
+										<TooltipContent className={cn({ hidden: capabilities.remoteMounts })}>
+											<p>
+												{capabilities.platform === "darwin"
+													? "Remote mounts are not supported on macOS"
+													: "Remote mounts require SYS_ADMIN capability"}
+											</p>
 										</TooltipContent>
-										<TooltipContent className={cn({ hidden: !capabilities.sysAdmin || capabilities.rclone })}>
+										<TooltipContent className={cn({ hidden: !capabilities.remoteMounts || capabilities.rclone })}>
 											<p>Setup rclone to use this backend</p>
 										</TooltipContent>
 									</Tooltip>

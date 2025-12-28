@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { $ } from "bun";
+import { isLinux, isDarwin } from "./platform";
 
 type MountInfo = {
 	mountPoint: string;
@@ -21,7 +23,10 @@ function unescapeMount(s: string): string {
 	return s.replace(/\\([0-7]{3})/g, (_, oct) => String.fromCharCode(parseInt(oct, 8)));
 }
 
-export async function readMountInfo(): Promise<MountInfo[]> {
+/**
+ * Linux implementation - reads /proc/self/mountinfo
+ */
+async function readMountInfoLinux(): Promise<MountInfo[]> {
 	const text = await fs.readFile("/proc/self/mountinfo", "utf-8");
 	const result: MountInfo[] = [];
 
@@ -43,6 +48,44 @@ export async function readMountInfo(): Promise<MountInfo[]> {
 		result.push({ mountPoint: unescapeMount(mpRaw), fstype });
 	}
 	return result;
+}
+
+/**
+ * macOS implementation - parses `mount` command output
+ * Format: /dev/disk1s1 on / (apfs, local, journaled)
+ */
+async function readMountInfoDarwin(): Promise<MountInfo[]> {
+	try {
+		const result = await $`mount`.text();
+		const mounts: MountInfo[] = [];
+
+		for (const line of result.split("\n")) {
+			if (!line.trim()) continue;
+
+			// Match: <device> on <mount_point> (<fstype>, ...)
+			const match = line.match(/^(.+?) on (.+?) \(([^,)]+)/);
+			if (match) {
+				const [, , mountPoint, fstype] = match;
+				if (mountPoint && fstype) {
+					mounts.push({ mountPoint: mountPoint.trim(), fstype: fstype.trim() });
+				}
+			}
+		}
+
+		return mounts;
+	} catch (_) {
+		return [];
+	}
+}
+
+export async function readMountInfo(): Promise<MountInfo[]> {
+	if (isLinux()) {
+		return readMountInfoLinux();
+	}
+	if (isDarwin()) {
+		return readMountInfoDarwin();
+	}
+	return [];
 }
 
 export async function getMountForPath(p: string): Promise<MountInfo | undefined> {

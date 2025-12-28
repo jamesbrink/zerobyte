@@ -3015,8 +3015,10 @@ export type GetSystemInfoResponses = {
      */
     200: {
         capabilities: {
+            platform: 'linux' | 'darwin' | 'unsupported';
             rclone: boolean;
             sysAdmin: boolean;
+            remoteMounts: boolean;
         };
     };
 };

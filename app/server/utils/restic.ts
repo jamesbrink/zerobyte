@@ -6,6 +6,7 @@ import { throttle } from "es-toolkit";
 import { type } from "arktype";
 import { REPOSITORY_BASE, RESTIC_PASS_FILE, DEFAULT_EXCLUDES } from "../core/constants";
 import { config as appConfig } from "../core/config";
+import { getPaths } from "./platform";
 import { logger } from "./logger";
 import { cryptoUtils } from "./crypto";
 import type { RetentionPolicy } from "../modules/backups/backups.dto";
@@ -107,7 +108,7 @@ export const buildRepoUrl = (config: RepositoryConfig): string => {
 
 export const buildEnv = async (config: RepositoryConfig) => {
 	const env: Record<string, string> = {
-		RESTIC_CACHE_DIR: "/var/lib/zerobyte/restic/cache",
+		RESTIC_CACHE_DIR: getPaths().resticCacheDir,
 		PATH: process.env.PATH || "/usr/local/bin:/usr/bin:/bin",
 	};
 

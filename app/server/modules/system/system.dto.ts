@@ -2,8 +2,10 @@ import { type } from "arktype";
 import { describeRoute, resolver } from "hono-openapi";
 
 export const capabilitiesSchema = type({
+	platform: "'linux' | 'darwin' | 'unsupported'",
 	rclone: "boolean",
 	sysAdmin: "boolean",
+	remoteMounts: "boolean",
 });
 
 export const systemInfoResponse = type({

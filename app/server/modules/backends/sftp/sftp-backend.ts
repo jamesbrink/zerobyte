@@ -7,12 +7,13 @@ import { cryptoUtils } from "../../../utils/crypto";
 import { toMessage } from "../../../utils/errors";
 import { logger } from "../../../utils/logger";
 import { getMountForPath } from "../../../utils/mountinfo";
+import { isDarwin, getPaths } from "../../../utils/platform";
 import { withTimeout } from "../../../utils/timeout";
 import type { VolumeBackend } from "../backend";
 import { executeUnmount } from "../utils/backend-utils";
 import { BACKEND_STATUS, type BackendConfig } from "~/schemas/volumes";
 
-const SSH_KEYS_DIR = "/var/lib/zerobyte/ssh";
+const SSH_KEYS_DIR = getPaths().sshKeysDir;
 
 const getPrivateKeyPath = (mountPath: string) => {
 	const name = path.basename(mountPath);
@@ -33,8 +34,11 @@ const mount = async (config: BackendConfig, mountPath: string) => {
 	}
 
 	if (os.platform() !== "linux") {
-		logger.error("SFTP mounting is only supported on Linux hosts.");
-		return { status: BACKEND_STATUS.error, error: "SFTP mounting is only supported on Linux hosts." };
+		const message = isDarwin()
+			? "SFTP volume mounting is not supported on macOS. Use the Directory backend or a cloud repository instead."
+			: "SFTP mounting is only supported on Linux hosts.";
+		logger.error(message);
+		return { status: BACKEND_STATUS.error, error: message };
 	}
 
 	const { status } = await checkHealth(mountPath);

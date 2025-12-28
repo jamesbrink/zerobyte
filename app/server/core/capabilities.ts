@@ -1,9 +1,12 @@
 import * as fs from "node:fs/promises";
 import { logger } from "../utils/logger";
+import { getPlatform, isLinux, isDarwin, getPaths, type Platform } from "../utils/platform";
 
 export type SystemCapabilities = {
+	platform: Platform;
 	rclone: boolean;
 	sysAdmin: boolean;
+	remoteMounts: boolean;
 };
 
 let capabilitiesPromise: Promise<SystemCapabilities> | null = null;
@@ -26,22 +29,31 @@ export async function getCapabilities(): Promise<SystemCapabilities> {
  * Detects which optional capabilities are available in the current environment
  */
 async function detectCapabilities(): Promise<SystemCapabilities> {
+	const platform = getPlatform();
+	const sysAdmin = await detectSysAdmin();
+
+	logger.info(`Platform detected: ${platform}`);
+
 	return {
+		platform,
 		rclone: await detectRclone(),
-		sysAdmin: await detectSysAdmin(),
+		sysAdmin,
+		// Remote mounts require Linux + SYS_ADMIN capability
+		remoteMounts: isLinux() && sysAdmin,
 	};
 }
 
 /**
  * Checks if rclone is available by:
- * 1. Checking if /root/.config/rclone directory exists and is accessible
+ * 1. Checking if the rclone config directory exists and is accessible
  */
 async function detectRclone(): Promise<boolean> {
 	try {
-		await fs.access("/root/.config/rclone");
+		const rcloneConfigDir = getPaths().rcloneConfigDir;
+		await fs.access(rcloneConfigDir);
 
 		// Make sure the folder is not empty
-		const files = await fs.readdir("/root/.config/rclone");
+		const files = await fs.readdir(rcloneConfigDir);
 		if (files.length === 0) {
 			throw new Error("rclone config directory is empty");
 		}
@@ -49,12 +61,22 @@ async function detectRclone(): Promise<boolean> {
 		logger.info("rclone capability: enabled");
 		return true;
 	} catch (_) {
-		logger.warn("rclone capability: disabled. " + "To enable: mount /root/.config/rclone in docker-compose.yml");
+		const msg = isDarwin()
+			? "rclone capability: disabled. To enable: configure rclone at ~/.config/rclone"
+			: "rclone capability: disabled. To enable: mount /root/.config/rclone in docker-compose.yml";
+		logger.warn(msg);
 		return false;
 	}
 }
 
 async function detectSysAdmin(): Promise<boolean> {
+	// On macOS, we don't have CAP_SYS_ADMIN concept
+	// Remote mounts are not supported regardless
+	if (isDarwin()) {
+		logger.info("sysAdmin capability: not applicable on macOS (remote mounts disabled)");
+		return false;
+	}
+
 	try {
 		const procStatus = await fs.readFile("/proc/self/status", "utf-8");
 
@@ -81,10 +103,10 @@ async function detectSysAdmin(): Promise<boolean> {
 			return true;
 		}
 
-		logger.warn("sysAdmin capability: disabled. " + "To enable: add 'cap_add: SYS_ADMIN' in docker-compose.yml");
+		logger.warn("sysAdmin capability: disabled. To enable: add 'cap_add: SYS_ADMIN' in docker-compose.yml");
 		return false;
 	} catch (_error) {
-		logger.warn("sysAdmin capability: disabled. " + "To enable: add 'cap_add: SYS_ADMIN' in docker-compose.yml");
+		logger.warn("sysAdmin capability: disabled. To enable: add 'cap_add: SYS_ADMIN' in docker-compose.yml");
 		return false;
 	}
 }

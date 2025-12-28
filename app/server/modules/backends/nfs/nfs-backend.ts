@@ -4,6 +4,7 @@ import { OPERATION_TIMEOUT } from "../../../core/constants";
 import { toMessage } from "../../../utils/errors";
 import { logger } from "../../../utils/logger";
 import { getMountForPath } from "../../../utils/mountinfo";
+import { isDarwin } from "../../../utils/platform";
 import { withTimeout } from "../../../utils/timeout";
 import type { VolumeBackend } from "../backend";
 import { executeMount, executeUnmount } from "../utils/backend-utils";
@@ -18,8 +19,11 @@ const mount = async (config: BackendConfig, path: string) => {
 	}
 
 	if (os.platform() !== "linux") {
-		logger.error("NFS mounting is only supported on Linux hosts.");
-		return { status: BACKEND_STATUS.error, error: "NFS mounting is only supported on Linux hosts." };
+		const message = isDarwin()
+			? "NFS volume mounting is not supported on macOS. Use the Directory backend or a cloud repository instead."
+			: "NFS mounting is only supported on Linux hosts.";
+		logger.error(message);
+		return { status: BACKEND_STATUS.error, error: message };
 	}
 
 	const { status } = await checkHealth(path);
